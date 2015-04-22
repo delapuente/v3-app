@@ -1,0 +1,161 @@
+
+html {
+  font-size: 62.5%;
+  font-family: sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+*:focus {
+  outline: 0;
+}
+
+h1 {
+  height: 5rem;
+  line-height: 5rem;
+  font-size: 2.5rem;
+  padding-left: 0.5rem;
+  background-color: #30c7ff;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+form {
+  width: 100%;
+  text-align: center;
+}
+
+input[type="text"] {
+  height: 2rem;
+  line-height: 2rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border: 0.1rem solid #aaa;
+  border-radius: 0.7rem;
+}
+
+.icon {
+  position: absolute;
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  background-size: 5rem 5rem;
+  text-indent: -9999rem;
+  background-color: #30c7ff;
+}
+
+.icon.search {
+  background-image: url('./search.png');
+}
+
+.icon.fav {
+  background-image: url('./star.png');
+}
+
+body.fav .icon.fav {
+  background-image: url('./star-on.png');
+}
+
+.icon.right {
+  top: 0;
+  right: 0;
+}
+
+.icon.right2 {
+  top: 0;
+  right: 5rem;
+}
+
+.item {
+  margin: 0.5rem;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-align: center;
+  background-color: #efefef;
+  border-radius: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+a {
+  color: #333;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+ul .item {
+  height: auto;
+}
+
+.item h2 {
+  font-size: inherit;
+}
+
+img {
+  float: left;
+  margin-right: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+p {
+  margin-bottom: 0.7rem;
+  margin-right: 1.5rem;
+  text-align: justify;
+  font-size: 1.3rem;
+}
+
+p:first-of-type {
+  margin-top: 1rem;
+}
+
+.loader {
+  margin: 0.2rem auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999rem;
+  border-top: 0.5rem solid rgba(255, 255, 255, 0.2);
+  border-right: 0.5rem solid rgba(255, 255, 255, 0.2);
+  border-bottom: 0.5rem solid rgba(255, 255, 255, 0.2);
+  border-left: 0.5rem solid #30c7ff;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}

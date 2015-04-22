@@ -7,6 +7,7 @@
   .catch(console.error.bind(console, 'Registration failed!'));
 
   var $ = document.querySelector.bind(document);
+
   var searchBox = $('input');
   var movieList = $('ul');
   var noMovies = $('#no-movies-message');
@@ -14,33 +15,46 @@
   var spinner = $('#spinner');
   var lastXHR;
 
-  searchBox.oninput = function () {
-    lastXHR && lastXHR.abort();
+  setupInteraction();
 
-    var title = searchBox.value.trim();
-    var cors = 'http://crossorigin.me/'; //XXX: to bypass CORS
-    var query = cors + 'http://www.omdbapi.com/?s=' +
-                (title ? title + '*' : '');
+  function setupInteraction() {
+    searchBox.oninput = function () {
+      lastXHR && lastXHR.abort();
 
-    var xhr = lastXHR = new XMLHttpRequest();
-    xhr.open('GET', query);
-    xhr.responseType = 'json';
-    xhr.onload = function () {
-      spinner.setAttribute('hidden', 'hidden');
-      refreshFilmList(xhr.response);
+      var title = searchBox.value.trim();
+      var cors = 'http://crossorigin.me/'; //XXX: to bypass CORS
+      var query = cors + 'http://www.omdbapi.com/?s=' +
+                  (title ? title + '*' : '');
+
+      var xhr = lastXHR = new XMLHttpRequest();
+      xhr.open('GET', query);
+      xhr.responseType = 'json';
+      xhr.onload = function () {
+        hideSpinner();
+        renderFilmList(xhr.response);
+      };
+      xhr.send();
+      showSpinner();
     };
-    xhr.send();
+  }
 
+  function showSpinner() {
     spinner.removeAttribute('hidden');
-  };
+  }
 
-  function refreshFilmList(response) {
+  function hideSpinner() {
+    spinner.setAttribute('hidden', 'hidden');
+  }
+
+  function renderFilmList(response) {
     movieList.innerHTML = '';
     if (!response || response.Error) {
-      noMovies.removeAttribute('hidden');
+      showNoMoviesMessage();
       return;
     }
-    else { noMovies.setAttribute('hidden', 'hidden'); }
+    else {
+      hideNoMoviesMessage();
+    }
 
     var list = response.Search;
     var buffer = document.createDocumentFragment();
@@ -50,12 +64,20 @@
     movieList.appendChild(buffer);
   }
 
+  function showNoMoviesMessage() {
+    noMovies.removeAttribute('hidden');
+  }
+
+  function hideNoMoviesMessage() {
+    noMovies.setAttribute('hidden', 'hidden');
+  }
+
   function newMovieEntry(movie) {
     var template = movieTemplate.cloneNode(true);
     template.id = movie.imdbID;
-    template.querySelector('a').href = '/movies/' + movie.imdbID;
-    template.querySelector('h2').textContent =
-      movie.Title + ' (' + movie.Year + ')';
+    template.$ = template.querySelector.bind(template);
+    template.$('a').href = '/movie.html?id=' + movie.imdbID;
+    template.$('h2').textContent = movie.Title + ' (' + movie.Year + ')';
     return template;
   }
 }());

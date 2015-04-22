@@ -3,18 +3,20 @@
 <head>
   <title>Find that movie!</title>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" >
+  <link rel="stylesheet" href="style.css" />
   <script defer type="text/javascript" src="index.js"></script>
 </head>
 <body>
+  <h1>Find that movie!</h1>
+  <a class="icon right fav" href="/favourites.html"></a>
   <form action="">
     <input type="text" placeholder="search by title"/>
-    <div id="spinner" hidden>Searching...</div>
-    <a href="/favourites">Favourites</a>
+    <div id="spinner" class="loader" hidden>Searching...</div>
   </form>
-  <hr/>
-  <p id="no-movies-message">No movies found!</p>
+  <p class="item" id="no-movies-message">No movies found!</p>
   <ul>
-    <li>
+    <li class="item">
       <a href="#"><h2></h2></a>
     </li>
   </ul>
