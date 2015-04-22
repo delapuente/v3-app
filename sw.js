@@ -1,6 +1,6 @@
 
 importScripts('node_modules/serviceworkers-ware/dist/sww.js');
-importScripts('simpleStore.js');
+importScripts('js/simpleStore.js');
 
 var worker = new ServiceWorkerWare();
 

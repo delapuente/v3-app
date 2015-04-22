@@ -50,15 +50,15 @@ input[type="text"] {
 }
 
 .icon.search {
-  background-image: url('./search.png');
+  background-image: url('../img/search.png');
 }
 
 .icon.fav {
-  background-image: url('./star.png');
+  background-image: url('../img/star.png');
 }
 
 body.fav .icon.fav {
-  background-image: url('./star-on.png');
+  background-image: url('../img/star-on.png');
 }
 
 .icon.right {
@@ -103,11 +103,12 @@ ul .item {
 
 img {
   float: left;
-  margin-right: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 p {
+  margin-left: 1.5rem;
   margin-bottom: 0.7rem;
   margin-right: 1.5rem;
   text-align: justify;
