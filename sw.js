@@ -8,7 +8,7 @@ worker.get('/movies/*', function (request, response) {
   var id = pathName.substr(8);
   var cors = 'http://crossorigin.me/';
   var model = fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
-  var template = fetch('/movie-template.html');
+  var template = fetch('/movie.html');
 
   return Promise.all([template, model])
     .then(getBodies)
