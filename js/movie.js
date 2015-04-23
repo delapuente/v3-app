@@ -25,6 +25,7 @@
       var model = window.model = xhr.response;
       fillDOM(model);
       addToRenderCache(model);
+      performance.measure('visuallyLoaded', undefined, 'on-load');
       setupInteraction(model);
     };
 
@@ -35,6 +36,7 @@
 
   function fillDOM(model) {
     $('img').src = model.Poster;
+    $('img').onload = function () { performance.measure('visuallyLoaded'); }
     $('h1').textContent = model.Title + ' (' + model.Year + ')';
     $('title').textContent = $('h1').textContent;
     $('#genre').textContent = model.Genre;
@@ -99,6 +101,7 @@
       isFavourite.disabled = false;
       isFavourite.checked = xhr.status !== 404;
       favPage(isFavourite.checked);
+      performance.measure('contentInteractive');
     };
     xhr.send();
   };
