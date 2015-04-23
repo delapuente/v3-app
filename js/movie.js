@@ -8,25 +8,24 @@
   // on purpose. I'm the one who is setting this mark as well. See
   var isCached = $('meta[cached]');
   var isFavourite = $('input[name="is-favourite"]');
-  var model;
 
   if (!isCached) {
     var id = parameters().id;
-    renderMovie(id);
+    getAndRenderMovie(id);
   }
   else {
-    setupInteraction();
+    setupInteraction(model);
   }
 
-  function renderMovie(movieId) {
+  function getAndRenderMovie(movieId) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/api/movies/' + movieId);
     xhr.responseType = 'json';
     xhr.onload = function () {
-      model = xhr.response;
+      var model = window.model = xhr.response;
       fillDOM(model);
-      addToRenderCache();
-      setupInteraction();
+      addToRenderCache(model);
+      setupInteraction(model);
     };
 
     // This is the hard work because it involves a query to the model
@@ -44,10 +43,9 @@
     $('#plot').textContent = model.Plot;
   }
 
-  function addToRenderCache() {
-    var cacheMark = document.createElement('META');
-    cacheMark.setAttribute('cached', 'cached');
-    $('head').appendChild(cacheMark);
+  function addToRenderCache(model) {
+    serializeModel(model);
+    markAsRender();
 
     // This outerHTML could be huge. Send to a worker ASAP.
     var renderedContent = document.documentElement.outerHTML;
@@ -57,7 +55,20 @@
     xhr.send(renderedContent);
   }
 
-  function setupInteraction() {
+  function serializeModel(model) {
+    var serialized = JSON.stringify(model);
+    var script = document.createElement('SCRIPT');
+    script.textContent = 'window.model=' + serialized;
+    $('head').insertBefore(script, $('head').firstChild);
+  }
+
+  function markAsRender() {
+    var cacheMark = document.createElement('META');
+    cacheMark.setAttribute('cached', 'cached');
+    $('head').appendChild(cacheMark);
+  }
+
+  function setupInteraction(model) {
     isFavourite.onclick = function () {
       var url = '/api/favourites/' + model.imdbID;
       var content, method;
@@ -74,16 +85,16 @@
       xhr.open(method, url);
       xhr.send(content);
     };
-    setTimeout(checkIsFavourite);
+    setTimeout(checkIsFavourite.bind(this, model));
   }
 
   function favPage(isFavourite) {
     $('body').classList[isFavourite ? 'add' : 'remove']('fav');
   }
 
-  function checkIsFavourite() {
+  function checkIsFavourite(model) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/favourites/' + parameters().id);
+    xhr.open('GET', '/api/favourites/' + model.imdbID);
     xhr.onload = function () {
       isFavourite.disabled = false;
       isFavourite.checked = xhr.status !== 404;

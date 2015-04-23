@@ -1,4 +1,5 @@
 var RESOURCES = [
+  '/',
   '/favourites.html',
   '/index.html',
   '/js/movie.js',
