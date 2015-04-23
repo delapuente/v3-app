@@ -1,9 +1,19 @@
 
 importScripts('node_modules/serviceworkers-ware/dist/sww.js');
+importScripts('node_modules/sww-raw-cache/dist/sww-raw-cache.js');
 importScripts('js/simpleStore.js');
 
+// Render Cache
 var worker = new ServiceWorkerWare();
 
+// The render cache improves the performance of the most expensive part of
+// the app by caching the rendered view for the specific movie.
+worker.use('/movie\\.html', new RawCache({ cacheName: 'RenderCache' }));
+worker.use('/movie\\.html', function (req, res) {
+  return res ? Promise.resolve(res) : fetch(req);
+});
+
+// REST API
 worker.get('/api/movies/.*', function (request) {
   var pathName = new URL(request.url).pathname;
   var id = pathName.substr(12);
@@ -91,5 +101,10 @@ function findIndex(favourites, id) {
   }
   return i === favourites.length ? -1 : i;
 }
+
+// Offline cache
+importScripts('/resources.js');
+worker.use(new self.StaticCacher(RESOURCES));
+worker.use(new self.SimpleOfflineCache());
 
 worker.init();

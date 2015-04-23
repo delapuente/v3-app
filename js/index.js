@@ -2,9 +2,13 @@
   'use strict';
 
   // XXX: Registering the SW
-  navigator.serviceWorker.register('/sw.js', { scope: '/' })
-  .then(console.log.bind(console, 'SW registered!'))
-  .catch(console.error.bind(console, 'Registration failed!'));
+  if (navigator.serviceWorker && !navigator.serviceWorker.controller) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    .then(console.log.bind(console, 'SW registered!'))
+    .then(function () { document.location.reload(); })
+    .catch(console.error.bind(console, 'Registration failed!'));
+  }
+  else { console.log('SW already there!'); }
 
   var $ = document.querySelector.bind(document);
 

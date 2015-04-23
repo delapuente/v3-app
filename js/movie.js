@@ -3,6 +3,9 @@
   'use strict';
 
   var $ = document.querySelector.bind(document);
+
+  // I'm going to read this meta header when the view comes from RenderCache
+  // on purpose. I'm the one who is setting this mark as well. See
   var isCached = $('meta[cached]');
   var isFavourite = $('input[name="is-favourite"]');
   var model;
@@ -11,8 +14,9 @@
     var id = parameters().id;
     renderMovie(id);
   }
-
-  setupInteraction();
+  else {
+    setupInteraction();
+  }
 
   function renderMovie(movieId) {
     var xhr = new XMLHttpRequest();
@@ -21,7 +25,12 @@
     xhr.onload = function () {
       model = xhr.response;
       fillDOM(model);
+      addToRenderCache();
+      setupInteraction();
     };
+
+    // This is the hard work because it involves a query to the model
+    // (which is actually a network request bypassing CORS with a proxy!)
     xhr.send();
   }
 
@@ -33,6 +42,19 @@
     $('#director').textContent = model.Director;
     $('#actors').textContent = model.Actors;
     $('#plot').textContent = model.Plot;
+  }
+
+  function addToRenderCache() {
+    var cacheMark = document.createElement('META');
+    cacheMark.setAttribute('cached', 'cached');
+    $('head').appendChild(cacheMark);
+
+    // This outerHTML could be huge. Send to a worker ASAP.
+    var renderedContent = document.documentElement.outerHTML;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.location);
+    xhr.setRequestHeader('Content-Type', 'text/html');
+    xhr.send(renderedContent);
   }
 
   function setupInteraction() {
@@ -64,7 +86,7 @@
     xhr.open('GET', '/api/favourites/' + parameters().id);
     xhr.onload = function () {
       isFavourite.disabled = false;
-      isFavourite.checked = xhr.status >= 200 && xhr.status < 300;
+      isFavourite.checked = xhr.status !== 404;
       favPage(isFavourite.checked);
     };
     xhr.send();

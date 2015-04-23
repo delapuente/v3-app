@@ -1,0 +1,21 @@
+{
+  "name": "sww-telemetry",
+  "main": "dist/sww-telemetry.js",
+  "version": "0.0.0",
+  "authors": [
+    "The Gaia Team"
+  ],
+  "description": "Simple raw cache for sww using http verbs for content handling",
+  "license": "MPL",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "serviceworkerware": "git@github.com:arcturus/serviceworkerware.git"
+  }
+}
