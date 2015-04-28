@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>DynamicCache Test</title>
+</head>
+<body>
+<script>
+    if (navigator.serviceWorker) {
+        navigator.serviceWorker.register('./sw.js');
+    } else {
+        console.info('No SW present :(');
+    }
+</script>
+<section>
+    <h2>Contents of the cache</h2>
+    <article id="contents"></article>
+</section>
+<section>
+    <h2>Info</h2>
+    <p>
+        You are viewing an example of ServiceWorkers, in this case is a cache that allows you to modify the contents of the offline cache.
+    </p>
+    <p>
+        Some examples on how to modify this content are:
+    </p>
+    <p>
+        <b>Add new content to the cache:</b><br/>
+        http://localhost:8000/demo/dynamic/<input type="text" id="url1"><br/>
+        Content: <br/><textarea id="content"></textarea><br>
+        <button onClick="cacheContent()">Save on the cache</button>
+        <script>
+            function cacheContent() {
+                var fixed = 'http://localhost:8000/demo/dynamic/';
+                var url = fixed + document.getElementById('url1').value;
+                url = url.trim();
+                if (url === fixed) {
+                    return;
+                }
+                var content = '<html><head><title>Dynamic</title></head><body>' +
+                        document.getElementById('content').value +
+                        '</body></html>';
+
+                DynamicCacheClient.postContent(url, content);
+            }
+        </script>
+    </p>
+    <pre>
+        <code>
+            DynamicCacheClient.postContent(url, content);
+        </code>
+    </pre>
+    <p>
+        <b>Remove content from the cache:</b><br/>
+        http://localhost:8000/demo/dynamic/<input type="text" id="url2"><br/>
+        <button onClick="removeFromCache()">Remove from cache</button>
+        <script>
+            function removeFromCache() {
+                var url = 'http://localhost:8000/demo/dynamic/' + document.getElementById('url2').value;
+                DynamicCacheClient.deleteContent(url);
+            }
+        </script>
+    </p>
+    <pre>
+        <code>
+            DynamicCacheClient.deleteContent(url);
+        </code>
+    </pre>
+    <p>
+        <b>Content of the cache:</b>
+    </p>
+    <ul id="cache_content">
+
+    </ul>
+    <pre>
+        <code>
+            DynamicCacheClient.listAll().then(function(elements) {
+                elements.forEach(function(url) {
+                    var li = document.createElement('li');
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.target = '_blanc';
+                    a.textContent = url;
+                    li.appendChild(a);
+                    list.appendChild(li);
+                });
+            });
+        </code>
+    </pre>
+</section>
+<script src="../lib/dynamiccacheclient.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var list = document.getElementById('cache_content');
+        list.innerHTML = '';
+        DynamicCacheClient.listAll().then(function(elements) {
+            elements.forEach(function(url) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.href = url;
+                a.target = '_blanc';
+                a.textContent = url;
+                li.appendChild(a);
+                list.appendChild(li);
+            });
+        });
+    });
+</script>
+</body>
+</html>

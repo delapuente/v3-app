@@ -1,6 +1,6 @@
 
 importScripts('node_modules/serviceworkers-ware/dist/sww.js');
-importScripts('node_modules/sww-raw-cache/dist/sww-raw-cache.js');
+importScripts('node_modules/dynamiccache/dist/dynamiccache.js');
 importScripts('js/simpleStore.js');
 
 // Render Cache
@@ -8,10 +8,7 @@ var worker = new ServiceWorkerWare();
 
 // The render cache improves the performance of the most expensive part of
 // the app by caching the rendered view for the specific movie.
-worker.use('/movie\\.html', new RawCache({ cacheName: 'RenderCache' }));
-worker.use('/movie\\.html', function (req, res) {
-  return res ? Promise.resolve(res) : fetch(req);
-});
+worker.use('/movie\\.html', new DynamicCache('movies'));
 
 // REST API
 worker.get('/api/movies/.*', function (request) {
@@ -28,6 +25,13 @@ worker.get('/api/favourites$', function () {
     favourites = favourites || "[]";
     return new Response(favourites, options);
   });
+});
+
+worker.get('/api/posters/.+', function(request) {
+  var pathName = new URL(request.url).pathname;
+  var poster = pathName.substr(13);
+  var cors = 'http://crossorigin.me/';
+  return fetch(cors + poster);
 });
 
 worker.put('/api/favourites/.+', function (request) {

@@ -25,7 +25,6 @@
       var model = window.model = xhr.response;
       fillDOM(model);
       addToRenderCache(model);
-      performance.measure('visuallyLoaded', undefined, 'on-load');
       setupInteraction(model);
     };
 
@@ -35,8 +34,11 @@
   }
 
   function fillDOM(model) {
-    $('img').src = model.Poster;
-    $('img').onload = function () { performance.measure('visuallyLoaded'); }
+    $('img').src = '/api/posters/' + model.Poster;
+    // Generate performance measure like this, so it will be available for the
+    // first time that is painted, and will remain on the cached code too.
+    $('img').setAttribute('onLoad',
+     'javascript:performance.measure(\'visuallyLoaded\')');
     $('h1').textContent = model.Title + ' (' + model.Year + ')';
     $('title').textContent = $('h1').textContent;
     $('#genre').textContent = model.Genre;
@@ -51,10 +53,7 @@
 
     // This outerHTML could be huge. Send to a worker ASAP.
     var renderedContent = document.documentElement.outerHTML;
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', window.location);
-    xhr.setRequestHeader('Content-Type', 'text/html');
-    xhr.send(renderedContent);
+    DynamicCacheClient.postContent(window.location.toString(), renderedContent);
   }
 
   function serializeModel(model) {
