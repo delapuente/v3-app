@@ -18,7 +18,7 @@
   "homepage": "https://github.com/lodr/v3-arch",
   "dependencies": {
     "serviceworkers-ware": "git://github.com/arcturus/serviceworkerware.git",
-    "sww-raw-cache": "git://github.com/arcturus/sww-raw-cache.git"
+    "sww-raw-cache": "git://github.com/lodr/sww-raw-cache.git#basic-match-options"
   },
   "devDependencies": {
   }

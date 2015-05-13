@@ -40,6 +40,9 @@
       xhr.send();
       showSpinner();
     };
+
+    $('#start-ab-testing').onclick = abTest.start;
+    $('#stop-ab-testing').onclick = abTest.stop;
   }
 
   function showSpinner() {
