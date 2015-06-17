@@ -1,0 +1,32 @@
+{
+  "name": "serviceworkerware",
+  "main": "dist/sww.js",
+  "version": "0.3.0",
+  "homepage": "https://github.com/gaia-components/serviceworkerware",
+  "authors": [
+    "Salvador de la Puente González <salva@unoyunodiez.com>",
+    "Francisco Jordano <francisco@jordano.es>"
+  ],
+  "ignore": [
+    "*",
+    "!dist/sww.js"
+  ],
+  "description": "An Express-like layer on top of ServiceWorkers to provide a way to easily plug functionality.",
+  "keywords": [
+    "serviceworkers",
+    "serviceworker",
+    "offline",
+    "cache",
+    "workers"
+  ],
+  "license": "MPL 2.0",
+  "_release": "0.3.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.3.0",
+    "commit": "d34f50648378994a5b94e26649d578cad33b222b"
+  },
+  "_source": "git://github.com/gaia-components/serviceworkerware.git",
+  "_target": "~0.3.0",
+  "_originalSource": "gaia-components/serviceworkerware"
+}
