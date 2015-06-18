@@ -1,7 +1,7 @@
 {
-  "name": "sww-telemetry",
-  "main": "dist/sww-telemetry.js",
-  "version": "0.0.0",
+  "name": "sww-raw-cache",
+  "main": "dist/sww-raw-cache.js",
+  "version": "0.2.1",
   "authors": [
     "The Gaia Team"
   ],
@@ -16,6 +16,6 @@
     "tests"
   ],
   "devDependencies": {
-    "serviceworkerware": "git@github.com:arcturus/serviceworkerware.git"
+    "serviceworkerware": "git@github.com:gaia-components/serviceworkerware.git"
   }
 }

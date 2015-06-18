@@ -25,13 +25,16 @@ Router.prototype.methods = ['get', 'post', 'put', 'delete', 'head',
  * @param handler (Function) payload to be executed if url matches.
  */
 Router.prototype.add = function r_add(method, path, handler) {
-  method = method.toLowerCase();
-  if (this.methods.indexOf(method) === -1) {
-    throw new Error('Method %s is not supported', method);
-  }
+  var pathRegex;
+
+  method = this._sanitizeMethod(method);
+
+  // Parse simle string path into regular expression for path matching
+  pathRegex = this._parseSimplePath(path);
+
   this.stack.push({
     method: method,
-    path: new RegExp(path),
+    path: pathRegex,
     handler: handler
   });
 };
@@ -49,7 +52,7 @@ Router.prototype.proxyMethods = function r_proxyPrototype(obj) {
   var self = this;
   this.methods.forEach(function(method) {
     obj[method] = function(path, mw) {
-      if (!(typeof mw.onFetch !== 'function' || typeof mw !== 'function')) {
+      if (typeof mw.onFetch !== 'function' && typeof mw !== 'function') {
         throw new Error('This middleware cannot handle fetch request');
       }
       var handler = typeof mw.onFetch !== 'undefined' ?
@@ -64,7 +67,7 @@ Router.prototype.proxyMethods = function r_proxyPrototype(obj) {
  * the stack.
  */
 Router.prototype.match = function r_match(method, url) {
-  method = method.toLowerCase();
+  method = this._sanitizeMethod(method);
   var matches = [];
 
   var self = this;
@@ -81,9 +84,57 @@ Router.prototype.match = function r_match(method, url) {
   return matches;
 };
 
+Router.prototype._sanitizeMethod = function(method) {
+  var sanitizedMethod = method.toLowerCase().trim();
+  if (this.methods.indexOf(sanitizedMethod) === -1) {
+    throw new Error('Method "' + method + '" is not supported');
+  }
+  return sanitizedMethod;
+};
+
+/**
+ * Simple path-to-regex translation based on the Express "string-based path"
+ * syntax.
+ */
+Router.prototype._parseSimplePath = function(path) {
+  // Check for named placeholder crowding
+  if (/\:[a-zA-Z0-9]+\:[a-zA-Z0-9]+/g.test(path)) {
+    throw new Error('Invalid usage of named placeholders');
+  }
+
+  // Check for mixed placeholder crowdings
+  var mixedPlaceHolders =
+    /(\*\:[a-zA-Z0-9]+)|(\:[a-zA-Z0-9]+\:[a-zA-Z0-9]+)|(\:[a-zA-Z0-9]+\*)/g;
+  if (mixedPlaceHolders.test(path.replace(/\\\*/g,''))) {
+    throw new Error('Invalid usage of named placeholders');
+  }
+
+  // Try parsing the string and converting special characters into regex
+  try {
+    // Parsing anonymous placeholders with simple backslash-escapes
+    path = path.replace(/(.|^)\*/g, function(m,escape) {
+      return escape==='\\' ? '\\*' : (escape+'(.*?)');
+    });
+
+    // Parsing named placeholders with backslash-escapes
+    path = path.replace(/(.|^)\:([a-zA-Z0-9]+)/g, function(m,escape,tag) {
+      return escape==='\\' ? (':'+tag) : (escape+'(.+?)');
+    });
+
+    return new RegExp(path + '$');
+  }
+
+  // Failed to parse final path as a RegExp
+  catch (ex) {
+    throw new Error('Invalid path specified');
+  }
+};
+
+
 module.exports = Router;
 
 },{}],3:[function(require,module,exports){
+/* global Promise */
 'use strict';
 
 var cacheHelper = require('sw-cache-helper');
@@ -91,9 +142,35 @@ var cacheHelper = require('sw-cache-helper');
 var debug = 0 ? console.log.bind(console, '[SimpleOfflineCache]') :
  function(){};
 
-function SimpleOfflineCache(cacheName) {
+// Default Match options, not exposed.
+var DEFAULT_MATCH_OPTIONS = {
+  ignoreSearch: false,
+  ignoreMethod: false,
+  ignoreVary: false
+};
+var DEFAULT_MISS_POLICY = 'fetchAndChace';
+// List of different policies
+var MISS_POLICIES = [
+  DEFAULT_MISS_POLICY
+];
+
+
+/**
+ * Constructor for the middleware that serves the content of a
+ * cache specified by it's name.
+ * @param {string} cacheName Name of the cache that will be serving the content
+ * @param {object} [options] Object use to setup the cache matching alternatives
+ * @param {string} [missPolicy] Name of the policy to follow if a request miss
+ *                 when hitting the cache.
+ */
+function SimpleOfflineCache(cacheName, options, missPolicy) {
   this.cacheName = cacheName || cacheHelper.defaultCacheName;
-  this.cache = null;
+  this.options = options || DEFAULT_MATCH_OPTIONS;
+  this.missPolicy = missPolicy || DEFAULT_MISS_POLICY;
+  if (MISS_POLICIES.indexOf(this.missPolicy) === -1) {
+    console.warn('Policy ' + missPolicy + ' not supported');
+    this.missPolicy = DEFAULT_MISS_POLICY;
+  }
 }
 
 SimpleOfflineCache.prototype.onFetch = function soc_onFetch(request, response) {
@@ -104,25 +181,25 @@ SimpleOfflineCache.prototype.onFetch = function soc_onFetch(request, response) {
   }
 
   var clone = request.clone();
+  var _this = this;
   debug('Handing fetch event: %s', clone.url);
   return this.ensureCache().then(function(cache) {
-    return cache.match(request.clone()).then(function(res) {
+    return cache.match(request.clone(), _this.options).then(function(res) {
       if (res) {
         return res;
       }
 
-      return cacheHelper.fetchAndCache(request, cache);
+      // So far we just support one policy
+      switch(_this.missPolicy) {
+        case DEFAULT_MISS_POLICY:
+          return cacheHelper.fetchAndCache(request, cache);
+      }
     });
   });
 };
 
 SimpleOfflineCache.prototype.ensureCache = function soc_ensureCache() {
-  if (this.cache) {
-    return Promise.resolve(this.cache);
-  }
-  var self = this;
   return cacheHelper.getCache(this.cacheName).then(function(cache) {
-    self.cache = cache;
     return cache;
   });
 };
@@ -130,9 +207,8 @@ SimpleOfflineCache.prototype.ensureCache = function soc_ensureCache() {
 module.exports = SimpleOfflineCache;
 
 },{"sw-cache-helper":6}],4:[function(require,module,exports){
+/* globals caches, Promise, Request */
 'use strict';
-
-var CacheHelper = require('sw-cache-helper');
 
 function StaticCacher(fileList) {
   if (!Array.isArray(fileList) || fileList.length === 0) {
@@ -143,15 +219,49 @@ function StaticCacher(fileList) {
 
 StaticCacher.prototype.onInstall = function sc_onInstall() {
   var self = this;
-  return CacheHelper.getDefaultCache().then(function(cache) {
-    return CacheHelper.addAll(cache, self.files);
+  return this.getDefaultCache().then(function(cache) {
+    return self.addAll(cache, self.files);
   });
 };
 
+StaticCacher.prototype.getDefaultCache = function sc_getDefaultCache() {
+  return caches.open('offline');
+};
+
+StaticCacher.prototype.addAll = function(cache, urls) {
+  if (!cache) {
+    throw new Error('Need a cache to store things');
+  }
+  // Polyfill until chrome implements it
+  if (typeof cache.addAll !== 'undefined') {
+    return cache.addAll(urls);
+  }
+
+  var promises = [];
+  var self = this;
+  urls.forEach(function(url) {
+    promises.push(self.fetchAndCache(new Request(url), cache));
+  });
+
+  return Promise.all(promises);
+};
+
+StaticCacher.prototype.fetchAndCache =
+function sc_fetchAndCache(request, cache) {
+
+  return fetch(request.clone()).then(function(response) {
+    if (parseInt(response.status) < 400) {
+      cache.put(request.clone(), response.clone());
+    }
+    return response;
+  });
+};
+
+
 module.exports = StaticCacher;
 
-},{"sw-cache-helper":6}],5:[function(require,module,exports){
-/* global fetch, BroadcastChannel, clients */
+},{}],5:[function(require,module,exports){
+/* global fetch, BroadcastChannel, clients, Promise, Request, Response */
 'use strict';
 
 var debug = 1 ? console.log.bind(console, '[ServiceWorkerWare]') : function(){};
@@ -159,10 +269,20 @@ var StaticCacher = require('./staticcacher.js');
 var SimpleOfflineCache = require('./simpleofflinecache.js');
 var Router = require('./router.js');
 
-function ServiceWorkerWare() {
+var ERROR = 'error';
+var CONTINUE = 'continue';
+var TERMINATE = 'terminate';
+var TERMINATION_TOKEN = {};
+
+function DEFAULT_FALLBACK_MW(request) {
+  return fetch(request);
+}
+
+function ServiceWorkerWare(fallbackMw) {
   this.middleware = [];
   this.router = new Router({});
   this.router.proxyMethods(this);
+  this.fallbackMw = fallbackMw || DEFAULT_FALLBACK_MW;
 }
 
 ServiceWorkerWare.prototype.init = function sww_init() {
@@ -184,7 +304,7 @@ ServiceWorkerWare.prototype.init = function sww_init() {
  * Handle and forward all events related to SW
  */
 ServiceWorkerWare.prototype.handleEvent = function sww_handleEvent(evt) {
-  debug('Event received: %s', evt.type);
+  debug('Event received: ' + evt.type);
   switch(evt.type) {
     case 'install':
       this.onInstall(evt);
@@ -199,22 +319,164 @@ ServiceWorkerWare.prototype.handleEvent = function sww_handleEvent(evt) {
       this.forwardEvent(evt);
       break;
     default:
-      debug('Unhandled event %s', evt.type);
+      debug('Unhandled event ' + evt.type);
   }
 };
 
 ServiceWorkerWare.prototype.onFetch = function sww_onFetch(evt) {
   var steps = this.router.match(evt.request.method, evt.request.url);
-  if (steps.length === 0) {
-    // XXX: we should have at least 1 basic middle ware that we install
-    // and can be overwritten. So far ... go to the network :(
-    return fetch(evt.request);
+
+  // Push the fallback middleware at the end of the list.
+  // XXX bug 1165860: Decorating fallback MW with `stopIfResponse` until
+  // 1165860 lands
+  steps.push((function(req, res) {
+    if (res) {
+      return Promise.resolve(res);
+    }
+    return this.fallbackMw(req, res);
+  }).bind(this));
+
+  evt.respondWith(this.executeMiddleware(steps, evt.request));
+};
+
+/**
+ * Run the middleware pipeline and inform if errors preventing respondWith()
+ * to swallow the error.
+ *
+ * @param {Array} the middleware pipeline
+ * @param {Request} the request for the middleware
+ */
+ServiceWorkerWare.prototype.executeMiddleware = function (middleware, request) {
+  var response = this.runMiddleware(middleware, 0, request, null);
+  response.catch(function (error) { console.error(error); });
+  return response;
+};
+
+/**
+ * Pass through the middleware pipeline, executing each middleware in a
+ * sequence according to the result from each execution.
+ *
+ * Each middleware will be passed with the request and response from the
+ * previous one in the pipeline. The response from the latest one will be
+ * used to answer from the service worker. The middleware will receive,
+ * as the last parameter, a function to stop the pipeline and answer
+ * immediately.
+ *
+ * A middleware run can lead to continuing execution, interruption of the
+ * pipeline or error. The next action to be performed is calculated according
+ * the conditions of the middleware execution and its return value.
+ * See normalizeMwAnswer() for details.
+ *
+ * @param {Array} middleware pipeline.
+ * @param {Number} middleware to execute in the pipeline.
+ * @param {Request} the request for the middleware.
+ * @param {Response} the response for the middleware.
+ */
+ServiceWorkerWare.prototype.runMiddleware =
+function (middleware, current, request, response) {
+  if (current >= middleware.length) {
+    return Promise.resolve(response);
   }
-  evt.respondWith(steps.reduce(function(prevTaskPromise, currentTask) {
-    debug('Applying middleware %s', currentTask.name);
-    return prevTaskPromise.then(currentTask.bind(currentTask,
-       evt.request.clone()));
-  }, Promise.resolve(null)));
+
+  var mw = middleware[current];
+  var endWith = ServiceWorkerWare.endWith;
+  var answer = mw(request, response, endWith);
+  var normalized =
+    ServiceWorkerWare.normalizeMwAnswer(answer, request, response);
+
+  return normalized.then(function (info) {
+    switch (info.nextAction) {
+      case TERMINATE:
+        return Promise.resolve(info.response);
+
+      case ERROR:
+        return Promise.reject(info.error);
+
+      case CONTINUE:
+        var next = current + 1;
+        var request = info.request;
+        var response = info.response;
+        return this.runMiddleware(middleware, next, request, response);
+    }
+  }.bind(this));
+};
+
+/**
+ * A function to force interruption of the pipeline.
+ *
+ * @param {Response} the response object that will be used to answer from the
+ * service worker.
+ */
+ServiceWorkerWare.endWith = function (response) {
+  if (arguments.length === 0) {
+    throw new Error('Type error: endWith() must be called with a value.');
+  }
+  return [TERMINATION_TOKEN, response];
+};
+
+/**
+ * A middleware is supposed to return a promise resolving in a pair of request
+ * and response for the next one or to indicate that it wants to answer
+ * immediately.
+ *
+ * To allow flexibility, the middleware is allowed to return other values
+ * rather than the promise. For instance, it is allowed to return only a
+ * request meaning the next middleware will be passed that request but the
+ * previous response untouched.
+ *
+ * The function takes into account all the scenarios to compute the request
+ * and response for the next middleware or the intention to terminate
+ * immediately.
+ *
+ * @param {Any} non normalized answer from the middleware.
+ * @param {Request} request passed as parameter to the middleware.
+ * @param {Response} response passed as parameter to the middleware.
+ */
+ServiceWorkerWare.normalizeMwAnswer = function (answer, request, response) {
+  if (!answer || !answer.then) {
+    answer = Promise.resolve(answer);
+  }
+  return answer.then(function (value) {
+    var nextAction = CONTINUE;
+    var error, nextRequest, nextResponse;
+    var isArray = Array.isArray(value);
+
+    if (isArray && value[0] === TERMINATION_TOKEN) {
+      nextAction = TERMINATE;
+      nextRequest = request;
+      nextResponse = value[1] || response;
+    }
+    else if (value === null) {
+      nextRequest = request;
+      nextResponse = null;
+    }
+    else if (isArray && value.length === 2) {
+      nextRequest = value[0];
+      nextResponse = value[1];
+    }
+    else if (value instanceof Response) {
+      nextRequest = request;
+      nextResponse = value;
+    }
+    else if (value instanceof Request) {
+      nextRequest = value;
+      nextResponse = response;
+    }
+    else {
+      var msg = 'Type error: middleware must return a Response, ' +
+                'a Request, a pair [Response, Request] or a Promise ' +
+                'resolving to one of these types.';
+      nextAction = ERROR;
+      error = new Error(msg);
+    }
+
+    return {
+      nextAction: nextAction,
+      request: nextRequest,
+      response: nextResponse,
+      error: error
+    };
+  });
 };
 
 /**
@@ -249,7 +511,7 @@ ServiceWorkerWare.prototype.use = function sww_use() {
     throw new Error('No arguments given');
   }
   var mw = arguments[0];
-  var path = '/';
+  var path = '*';
   var method = this.router.ALL_METHODS;
   if (typeof mw === 'string') {
     path = arguments[0];
@@ -325,6 +587,30 @@ ServiceWorkerWare.prototype.broadcastMessage = function sww_broadcastMessage(
         client.postMessage(msg);
       });
     });
+  }
+};
+
+ServiceWorkerWare.decorators = {
+
+  ifNoResponse: function (mw) {
+    return function (req, res, endWith) {
+      if (res) { return [req, res]; }
+      return mw(req, res, endWith);
+    };
+  },
+
+  stopAfter: function (mw) {
+    return function (req, res, endWith) {
+      var answer = mw(req, res, endWith);
+      var normalized = ServiceWorkerWare.normalizeMwAnswer(answer, req, res);
+
+      return normalized.then(function (info) {
+        if (info.nextAction === 'error') {
+          return Promise.reject(info.error);
+        }
+        return endWith(info.response);
+      });
+    };
   }
 };
 

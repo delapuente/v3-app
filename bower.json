@@ -1,0 +1,23 @@
+{
+  "name": "v3-app",
+  "version": "0.0.0",
+  "homepage": "https://github.com/lodr/v3-app",
+  "authors": [
+    "Salvador de la Puente <salva@unoyunodiez.com>",
+    "Francisco Jordano <francisco@jordano.es>"
+  ],
+  "description": "A complete example of the NGA for Service Workers",
+  "main": "index.html",
+  "keywords": [
+    "nga",
+    "service",
+    "workers",
+    "serviceworkerware",
+    "sww"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "serviceworkerware": "gaia-components/serviceworkerware#~0.3.0",
+    "sww-raw-cache": "gaia-components/sww-raw-cache#~0.2.1"
+  }
+}
