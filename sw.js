@@ -13,7 +13,6 @@ worker.use('/movie.html?*', new RawCache({ cacheName: 'RenderCache' }));
 // REST API
 var stopAfter = ServiceWorkerWare.decorators.stopAfter;
 worker.get('/api/movies/:movieId', stopAfter(function (request, response) {
-  var pathName = new URL(request.url).pathname;
   var id = request.parameters.movieId;
   var cors = 'https://cross.ngrok.io/';
   return fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
@@ -50,7 +49,6 @@ worker.put('/api/favourites/:movieId', stopAfter(function (request) {
 }));
 
 worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
-  var pathName = new URL(request.url).pathname;
   var id = request.parameters.movieId;
   return findAndRemoveFavourite(id);
 
@@ -71,7 +69,6 @@ worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
 }));
 
 worker.get('/api/favourites/:movieId', stopAfter(function (request) {
-  var pathName = new URL(request.url).pathname;
   var id = request.parameters.movieId;
   return findMovie(id);
 
