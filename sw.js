@@ -15,7 +15,7 @@ var stopAfter = ServiceWorkerWare.decorators.stopAfter;
 worker.get('/api/movies/:movieId', stopAfter(function (request, response) {
   var pathName = new URL(request.url).pathname;
   var id = request.params.movieId;
-  var cors = 'https://jsonp.afeld.me/?url=';
+  var cors = 'https://cross.ngrok.io/';
   return fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
 }));
 

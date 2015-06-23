@@ -34,7 +34,8 @@
   }
 
   function fillDOM(model) {
-    $('img').src = model.Poster;
+    var cors = 'https://cross.ngrok.io/'; //XXX: to bypass CORS
+    $('img').src = cors + model.Poster;
     $('h1').textContent = model.Title + ' (' + model.Year + ')';
     $('title').textContent = $('h1').textContent;
     $('#genre').textContent = model.Genre;

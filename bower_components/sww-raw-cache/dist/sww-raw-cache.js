@@ -4,10 +4,8 @@ var RawCache = require('./lib/sww-raw-cache.js');
 self.RawCache = RawCache;
 
 },{"./lib/sww-raw-cache.js":2}],2:[function(require,module,exports){
-/* global Response, Request */
+/* global Response, Request, Promise */
 'use strict';
-
-var CacheHelper = require('sw-cache-helper');
 
 /**
  * Constructor for the RawCache object. It receives an object
@@ -28,7 +26,8 @@ function RawCache(options) {
  * @returns {Promise} promise once resolved will contain the Cache object
  */
 RawCache.prototype._getCache = function getCache() {
-  return CacheHelper.getCache(this.cacheName);
+  this._cache = this._cache || self.caches.open(this.cacheName);
+  return this._cache;
 };
 
 // This middleware will support the following http methods
@@ -39,8 +38,13 @@ RawCache.prototype.SUPPORTED_ACTIONS = ['get', 'post', 'put', 'delete'];
  * based on the http verb used for the request.
  * @param {Request} the request object.
  * @param {Response} the response object.
+ * @param {Function} the callback to finalize the fetching pipeline.
  */
-RawCache.prototype.onFetch = function onFetch(request, response) {
+RawCache.prototype.onFetch = function onFetch(request, response, endWith) {
+  if (response) {
+    return Promise.resolve(response);
+  }
+
   var method = request.method.toLowerCase();
   if (this.SUPPORTED_ACTIONS.indexOf(method) === -1) {
     // Method not supported, just bypass the request and do nothing
@@ -48,7 +52,7 @@ RawCache.prototype.onFetch = function onFetch(request, response) {
     return null;
   }
 
-  return this[method].apply(this, [request, response]);
+  return this[method].apply(this, [request, response, endWith]);
 };
 
 /**
@@ -57,9 +61,13 @@ RawCache.prototype.onFetch = function onFetch(request, response) {
  * @param {Response} response the response object.
  * @returns {Promise} Promise with the response object cached or null
  */
-RawCache.prototype.get = function get(request) {
-  return this._getCache().then(function(cache) {
-    return cache.match(request);
+RawCache.prototype.get = function get(request, response, endWith) {
+  var _this = this;
+  return _this._getCache().then(function(cache) {
+    return cache.match(request).then(function (response) {
+      if (!response) { return null; }
+      return endWith(response);
+    });
   });
 };
 
@@ -70,35 +78,41 @@ RawCache.prototype.get = function get(request) {
  * @returns {Promise} Promise, result of removing from cache.
  */
 RawCache.prototype.delete = function del(request) {
-  var self = this;
+  var _this = this;
   return this._getCache().then(function(cache) {
-    return cache.delete(request).then(self._getOKResponse,
-       self._getErrorResponse);
+    return cache.delete(request).then(
+      _this._getOKResponse,
+      _this._getErrorResponse
+    );
   });
 };
 
 /**
- * Removes the specified uri from the cache entry
+ * Adds the body of the specified request as a cache entry for the uri
+ * in the request.
  * @param {Request} request the request object.
  * @param {Response} response the response object.
  * @returns {Promise} Promise, 200 response if cached correctly.
  */
 RawCache.prototype.post = function post(request) {
-  var self = this;
+  var _this = this;
+  request = request.clone();
   return request.text().then(function(content) {
-    var contentType = request.headers.get('Content-Type') ||
-     self.DEFAULT_CONTENT_TYPE;
+    var contentType =
+      request.headers.get('Content-Type') || _this.DEFAULT_CONTENT_TYPE;
     var response = new Response(content, {
       'headers': {
-      	'x-sww-raw-cache': Date.now(),
+      	'x-sww-raw-cache': _this.cacheName + ';time=' + Date.now(),
       	'Content-Type': contentType
       }
     });
     // We create a new request, with default GET method
     var customRequest = new Request(request.url);
-    return self._getCache().then(function(cache) {
-      return cache.put(customRequest, response).then(self._getOKResponse,
-        self._getErrorResponse);
+    return _this._getCache().then(function(cache) {
+      return cache.put(customRequest, response).then(
+        _this._getOKResponse,
+        _this._getErrorResponse
+      );
     });
   });
 };
@@ -114,15 +128,9 @@ RawCache.prototype.put = RawCache.prototype.post;
  * @returns (Response) response object
  */
 RawCache.prototype._getOKResponse = function(msg) {
-  var response = {
-    status: 'ok'
-  };
-  if (msg) {
-    response.msg = msg;
-  }
-
-  return new Response(response, {
-    'Content-Type': 'application/json'
+  return RawCache._getResponse(200, {
+    'status': 'ok',
+    'msg': msg
   });
 };
 
@@ -133,65 +141,23 @@ RawCache.prototype._getOKResponse = function(msg) {
  * @returns (Response) response object
  */
 RawCache.prototype._getErrorResponse = function(msg) {
-  var response = {
-    status: 'ko'
-  };
-  if (msg) {
-    response.msg = msg;
-  }
+  return RawCache._getResponse(500, {
+    'status': 'ko',
+    'msg': msg
+  });
+};
 
-  return new Response(response, {
-    'Content-Type': 'application/json',
-    'status': 500
+/**
+ * Builds a generic response.
+ */
+RawCache._getResponse = function(statusNumber, content) {
+  return new Response(JSON.stringify(content), {
+    'headers': { 'Content-Type': 'application/json' },
+    'status': statusNumber
   });
 };
 
 module.exports = RawCache;
-
-},{"sw-cache-helper":3}],3:[function(require,module,exports){
-/* global caches, fetch, Promise, Request, module*/
-(function() {
-  'use strict';
-
-  var CacheHelper = {
-    defaultCacheName: 'offline',
-    getCache: function getCache(name) {
-      return caches.open(name);
-    },
-    getDefaultCache: function getDefaultCache() {
-      return this.getCache(this.defaultCacheName);
-    },
-    fetchAndCache: function fetchAndChache(request, cache) {
-      return fetch(request.clone()).then(function(response) {
-        var clone = response.clone();
-        if (parseInt(clone.status) < 400) {
-          cache.put(request.clone(), response.clone());
-        }
-
-        return response.clone();
-      });
-    },
-    addAll: function addAll(cache, urls) {
-      if (!cache) {
-        throw new Error('Need a cache to store things');
-      }
-      // Polyfill until chrome implements it
-      if (typeof cache.addAll !== 'undefined') {
-        return cache.addAll(urls);
-      }
-
-      var promises = [];
-      var self = this;
-      urls.forEach(function(url) {
-        promises.push(self.fetchAndCache(new Request(url), cache));
-      });
-
-      return Promise.all(promises);
-    }
-  };
-
-  module.exports = CacheHelper;
-})();
 
 },{}]},{},[1])
 
