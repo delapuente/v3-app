@@ -17,7 +17,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "serviceworkerware": "gaia-components/serviceworkerware#~0.3.0",
+    "serviceworkerware": "lodr/serviceworkerware#params",
     "sww-raw-cache": "gaia-components/sww-raw-cache#~0.2.1"
   }
 }

@@ -14,8 +14,8 @@ worker.use('/movie.html?*', new RawCache({ cacheName: 'RenderCache' }));
 var stopAfter = ServiceWorkerWare.decorators.stopAfter;
 worker.get('/api/movies/:movieId', stopAfter(function (request, response) {
   var pathName = new URL(request.url).pathname;
-  var id = pathName.substr(12);
   var cors = 'http://crossorigin.me/';
+  var id = request.params.movieId;
   return fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
 }));
 
@@ -51,7 +51,7 @@ worker.put('/api/favourites/:movieId', stopAfter(function (request) {
 
 worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
   var pathName = new URL(request.url).pathname;
-  var id = pathName.substr(16);
+  var id = request.params.movieId;
   return findAndRemoveFavourite(id);
 
   function findAndRemoveFavourite(id) {
@@ -72,7 +72,7 @@ worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
 
 worker.get('/api/favourites/:movieId', stopAfter(function (request) {
   var pathName = new URL(request.url).pathname;
-  var id = pathName.substr(16);
+  var id = request.params.movieId;
   return findMovie(id);
 
   function findMovie(id) {

@@ -1,7 +1,6 @@
 {
   "name": "serviceworkerware",
   "main": "dist/sww.js",
-  "version": "0.3.0",
   "homepage": "https://github.com/gaia-components/serviceworkerware",
   "authors": [
     "Salvador de la Puente González <salva@unoyunodiez.com>",
@@ -20,13 +19,13 @@
     "workers"
   ],
   "license": "MPL 2.0",
-  "_release": "0.3.0",
+  "_release": "d5c8c97cfc",
   "_resolution": {
-    "type": "version",
-    "tag": "0.3.0",
-    "commit": "d34f50648378994a5b94e26649d578cad33b222b"
+    "type": "branch",
+    "branch": "params",
+    "commit": "d5c8c97cfc3c5995231f430293dc96c71059e568"
   },
-  "_source": "git://github.com/gaia-components/serviceworkerware.git",
-  "_target": "~0.3.0",
-  "_originalSource": "gaia-components/serviceworkerware"
+  "_source": "git://github.com/lodr/serviceworkerware.git",
+  "_target": "params",
+  "_originalSource": "lodr/serviceworkerware"
 }
