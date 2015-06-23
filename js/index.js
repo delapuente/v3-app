@@ -26,7 +26,7 @@
       lastXHR && lastXHR.abort();
 
       var title = searchBox.value.trim();
-      var cors = 'http://crossorigin.me/'; //XXX: to bypass CORS
+      var cors = 'https://jsonp.afeld.me/?url='; //XXX: to bypass CORS
       var query = cors + 'http://www.omdbapi.com/?s=' +
                   (title ? title + '*' : '');
 

@@ -14,8 +14,8 @@ worker.use('/movie.html?*', new RawCache({ cacheName: 'RenderCache' }));
 var stopAfter = ServiceWorkerWare.decorators.stopAfter;
 worker.get('/api/movies/:movieId', stopAfter(function (request, response) {
   var pathName = new URL(request.url).pathname;
-  var cors = 'http://crossorigin.me/';
   var id = request.params.movieId;
+  var cors = 'https://jsonp.afeld.me/?url=';
   return fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
 }));
 
