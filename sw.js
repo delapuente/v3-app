@@ -1,4 +1,5 @@
 
+importScripts('cors-config.js');
 importScripts('bower_components/serviceworkerware/dist/sww.js');
 importScripts('bower_components/sww-raw-cache/dist/sww-raw-cache.js');
 importScripts('js/simpleStore.js');
@@ -14,8 +15,7 @@ worker.use('/movie.html?*', new RawCache({ cacheName: 'RenderCache' }));
 var stopAfter = ServiceWorkerWare.decorators.stopAfter;
 worker.get('/api/movies/:movieId', stopAfter(function (request, response) {
   var id = request.parameters.movieId;
-  var cors = 'https://cross.ngrok.io/';
-  return fetch(cors + 'http://www.omdbapi.com?plot=full&i=' + id);
+  return fetch(CORS + 'http://www.omdbapi.com?plot=full&i=' + id);
 }));
 
 worker.get('/api/favourites', stopAfter(function () {

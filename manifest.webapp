@@ -1,0 +1,9 @@
+{
+  "name": "Find that movie!",
+  "description": "A demo application about service workers in NGA",
+  "launch_path": "index.html",
+  "origin": "https://v3app.ngrok.io"
+  "icons": {
+    "128": "icons/128.png"
+  }
+}

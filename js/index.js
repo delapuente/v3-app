@@ -26,8 +26,7 @@
       lastXHR && lastXHR.abort();
 
       var title = searchBox.value.trim();
-      var cors = 'https://cross.ngrok.io/'; //XXX: to bypass CORS
-      var query = cors + 'http://www.omdbapi.com/?s=' +
+      var query = CORS + 'http://www.omdbapi.com/?s=' +
                   (title ? title + '*' : '');
 
       var xhr = lastXHR = new XMLHttpRequest();
