@@ -51,16 +51,17 @@ Finally the `SimpleOfflineCache` will serve the content stored from the `StaticC
 One of the advantages of using _serviceworkerware_ is you can write server code inside you service worker. Look at this CRUD API for listing, adding, consulting and deleting favourites.
 
 ```js
-worker.get('/api/favourites', function () {
+var stopAfter = ServiceWorkerWare.decorators.stopAfter;
+worker.get('/api/favourites', stopAfter(function () {
   var options = { headers: { 'Content-Type': 'application/json' } };
   return simpleStore.getRaw('favourites')
   .then(function (favourites) {
     favourites = favourites || "[]";
     return new Response(favourites, options);
   });
-});
+}));
 
-worker.put('/api/favourites/:movieId', function (request) {
+worker.put('/api/favourites/:movieId', stopAfter(function (request) {
   return request.clone().json()
   .then(storeMovieAsFavourite);
 
@@ -79,9 +80,9 @@ worker.put('/api/favourites/:movieId', function (request) {
       return new Response({ status: 201 });
     });
   }
-});
+}));
 
-worker.delete('/api/favourites/:movieId', function (request) {
+worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
   var id = request.parameters.movieId;
   return findAndRemoveFavourite(id);
 
@@ -99,9 +100,9 @@ worker.delete('/api/favourites/:movieId', function (request) {
       return new Response({ status: 204 });
     });
   }
-});
+}));
 
-worker.get('/api/favourites/:movieId', function (request) {
+worker.get('/api/favourites/:movieId', stopAfter(function (request) {
   var id = request.parameters.movieId;
   return findMovie(id);
 
@@ -121,5 +122,5 @@ worker.get('/api/favourites/:movieId', function (request) {
       return new Response(body, options);
     });
   }
-});
+}));
 ```
