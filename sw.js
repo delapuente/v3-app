@@ -27,7 +27,7 @@ worker.get('/api/favourites', stopAfter(function () {
   });
 }));
 
-worker.put('/api/favourites/:movieId', stopAfter(function (request) {
+worker.post('/api/favourites/', stopAfter(function (request) {
   return request.clone().json()
   .then(storeMovieAsFavourite);
 
@@ -48,7 +48,7 @@ worker.put('/api/favourites/:movieId', stopAfter(function (request) {
   }
 }));
 
-worker.delete('/api/favourites/:movieId', stopAfter(function (request) {
+worker.post('/api/favourites/delete/:movieId', stopAfter(function (request) {
   var id = request.parameters.movieId;
   return findAndRemoveFavourite(id);
 

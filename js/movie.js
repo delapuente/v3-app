@@ -71,14 +71,14 @@
 
   function setupInteraction(model) {
     isFavourite.onclick = function () {
-      var url = '/api/favourites/' + model.imdbID;
-      var content, method;
+      var content, url;
+      var method = 'POST';
       if (isFavourite.checked) {
-        method = 'PUT';
+        url = 'api/favourites/';
         content = JSON.stringify(model);
       }
       else {
-        method = 'DELETE';
+        url = '/api/favourites/delete/' + model.imdbID;
         content = undefined;
       }
       favPage(isFavourite.checked);
