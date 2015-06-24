@@ -49,10 +49,11 @@
 
     // This outerHTML could be huge. Send to a worker ASAP.
     var renderedContent = document.documentElement.outerHTML;
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', window.location);
-    xhr.setRequestHeader('Content-Type', 'text/html');
-    xhr.send(renderedContent);
+    fetch(new Request(window.location, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/html' },
+      body: renderedContent
+    }));
   }
 
   function serializeModel(model) {
@@ -81,9 +82,10 @@
         content = undefined;
       }
       favPage(isFavourite.checked);
-      var xhr = new XMLHttpRequest();
-      xhr.open(method, url);
-      xhr.send(content);
+      fetch(new Request(url, {
+        method: method,
+        body: content
+      }));
     };
     setTimeout(checkIsFavourite.bind(this, model));
   }
