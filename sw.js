@@ -9,7 +9,7 @@ var worker = new ServiceWorkerWare();
 
 // The render cache improves the performance of the most expensive part of
 // the app by caching the rendered view for the specific movie.
-worker.use('/movie.html?*', new RawCache({ cacheName: 'RenderCache' }));
+worker.use('/movie\\.html\\?id=:id', new RawCache({ cacheName: 'RenderCache' }));
 
 // REST API
 var stopAfter = ServiceWorkerWare.decorators.stopAfter;

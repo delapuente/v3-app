@@ -217,10 +217,11 @@ SimpleOfflineCache.prototype.onFetch = function soc_onFetch(request, response) {
 
   var clone = request.clone();
   var _this = this;
-  debug('Handing fetch event: %s', clone.url);
+  debug('Handing fetch event:', clone.url);
   return this.ensureCache().then(function(cache) {
     return cache.match(request.clone(), _this.options).then(function(res) {
       if (res) {
+        res.clone().text().then(console.log.bind(console, 'Cached'));
         return res;
       }
 
@@ -340,6 +341,9 @@ ServiceWorkerWare.prototype.init = function sww_init() {
  */
 ServiceWorkerWare.prototype.handleEvent = function sww_handleEvent(evt) {
   debug('Event received: ' + evt.type);
+  if (evt.request) {
+    debug(evt.request.method, evt.request.url);
+  }
   switch(evt.type) {
     case 'install':
       this.onInstall(evt);

@@ -60,7 +60,7 @@
     var serialized = JSON.stringify(model);
     var script = document.createElement('SCRIPT');
     script.textContent = 'window.model=' + serialized;
-    $('head').insertBefore(script, $('head').firstChild);
+    $('head').insertBefore(script, $('head > script'));
   }
 
   function markAsRender() {

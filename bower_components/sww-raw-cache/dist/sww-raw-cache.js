@@ -65,7 +65,12 @@ RawCache.prototype.get = function get(request, response, endWith) {
   var _this = this;
   return _this._getCache().then(function(cache) {
     return cache.match(request).then(function (response) {
-      if (!response) { return null; }
+      if (!response) {
+        console.log('[RawCache] Missing cache!');
+        return null;
+      }
+      console.log('[RawCache] Hitting cache!');
+      response.clone().text().then(console.log.bind(console, 'From RenderCache'));
       return endWith(response);
     });
   });
@@ -98,6 +103,7 @@ RawCache.prototype.post = function post(request) {
   var _this = this;
   request = request.clone();
   return request.text().then(function(content) {
+    console.log(content);
     var contentType =
       request.headers.get('Content-Type') || _this.DEFAULT_CONTENT_TYPE;
     var response = new Response(content, {
@@ -128,6 +134,7 @@ RawCache.prototype.put = RawCache.prototype.post;
  * @returns (Response) response object
  */
 RawCache.prototype._getOKResponse = function(msg) {
+  console.log('[RawCache] Put on the cache!');
   return RawCache._getResponse(200, {
     'status': 'ok',
     'msg': msg
