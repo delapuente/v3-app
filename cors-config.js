@@ -1,2 +1,2 @@
 
-var CORS = 'https://cross.ngrok.io/';
+var CORS = 'https://crossorigin.me/';
