@@ -25,7 +25,7 @@
     "branch": "params",
     "commit": "d5c8c97cfc3c5995231f430293dc96c71059e568"
   },
-  "_source": "git://github.com/lodr/serviceworkerware.git",
+  "_source": "git://github.com/delapuente/serviceworkerware.git",
   "_target": "params",
-  "_originalSource": "lodr/serviceworkerware"
+  "_originalSource": "delapuente/serviceworkerware"
 }

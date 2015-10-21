@@ -4,7 +4,7 @@ v3-app is toy movie finder using a service worker's proof of concept implementin
 
 ## How can I try it?
 
-[Download the master branch](https://github.com/lodr/v3-app/archive/master.zip), decompress locally and serves its contents from `localhost` with a simple [static web server](https://gist.github.com/willurd/5720255):
+[Download the master branch](https://github.com/delapuente/v3-app/archive/master.zip), decompress locally and serves its contents from `localhost` with a simple [static web server](https://gist.github.com/willurd/5720255):
 
 ```bash
 $ python3 -m http.server
@@ -14,7 +14,7 @@ Now with [Chrome Canary](https://www.google.es/chrome/browser/canary.html) or [F
 
 ## Browsing the code
 
-Code is quite straighforward and the most important parts are the [worker itself](https://github.com/lodr/v3-app/blob/nightly/sw.js) and the code in charge of [rendering the movie details](https://github.com/lodr/v3-app/blob/nightly/js/movie.js) in `movie.js`. The application is using [serviceworkerware](https://github.com/arcturus/serviceworkerware), a framework a-la express.js to ease service workers programming.
+Code is quite straighforward and the most important parts are the [worker itself](https://github.com/delapuente/v3-app/blob/nightly/sw.js) and the code in charge of [rendering the movie details](https://github.com/delapuente/v3-app/blob/nightly/js/movie.js) in `movie.js`. The application is using [serviceworkerware](https://github.com/arcturus/serviceworkerware), a framework a-la express.js to ease service workers programming.
 
 ### The service worker
 
@@ -42,7 +42,7 @@ worker.use(new self.StaticCacher(RESOURCES));
 worker.use(new self.SimpleOfflineCache());
 ```
 
-The `StaticCacher` is part of _serviceworkerware_ and will cache the array of resources passed as parameter. Take a look at [resources.js](https://github.com/lodr/v3-app/blob/nightly/resources.js) if you want.
+The `StaticCacher` is part of _serviceworkerware_ and will cache the array of resources passed as parameter. Take a look at [resources.js](https://github.com/delapuente/v3-app/blob/nightly/resources.js) if you want.
 
 Finally the `SimpleOfflineCache` will serve the content stored from the `StaticCacher`. As we're omitting the route, the middleware got installed for any route. As soon as the `SimpleOfflineCache` middleware try to find a resource in the cache without success, it will go to the network for a version and will cache that version.
 
